@@ -1,5 +1,17 @@
 import { z } from 'zod';
 
+const encryptionKeySchema = z.string().refine(
+  (val) => {
+    try {
+      const trimmed = val.trim();
+      return /^[0-9a-fA-F]+$/.test(trimmed) && Buffer.from(trimmed, "hex").length === 32;
+    } catch {
+      return false;
+    }
+  },
+  "ENCRYPTION_KEY must represent a 32-byte hex key"
+);
+
 /**
  * Environment variable schema with validation
  */
@@ -22,7 +34,7 @@ const envSchema = z.object({
 
   // Security
   JWT_SECRET: z.string().min(64, 'JWT_SECRET must be at least 64 characters'),
-  ENCRYPTION_KEY: z.string().length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)').regex(/^[0-9a-fA-F]+$/, 'ENCRYPTION_KEY must be a valid hex string'),
+  ENCRYPTION_KEY: encryptionKeySchema,
 
   // Application
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -44,7 +56,7 @@ const envSchema = z.object({
 const workerEnvSchema = z.object({
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid URL'),
   REDIS_URL: z.string().url('REDIS_URL must be a valid URL'),
-  ENCRYPTION_KEY: z.string().length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)').regex(/^[0-9a-fA-F]+$/, 'ENCRYPTION_KEY must be a valid hex string'),
+  ENCRYPTION_KEY: encryptionKeySchema,
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   TELEGRAM_BOT_TOKEN: z.string().min(1, 'TELEGRAM_BOT_TOKEN is required'),
   TELEGRAM_ADMIN_UID: z.string().min(1, 'TELEGRAM_ADMIN_UID is required').transform((val) => {
@@ -70,7 +82,7 @@ const botEnvSchema = z.object({
   }),
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid URL'),
   REDIS_URL: z.string().url('REDIS_URL must be a valid URL'),
-  ENCRYPTION_KEY: z.string().length(64, 'ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)').regex(/^[0-9a-fA-F]+$/, 'ENCRYPTION_KEY must be a valid hex string'),
+  ENCRYPTION_KEY: encryptionKeySchema,
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   INTERNAL_API_URL: z.string().url('INTERNAL_API_URL must be a valid URL'),
 });
