@@ -16,6 +16,7 @@
   "dependencies": {
     "@mailguard/core": "*",
     "@mailguard/smtp": "*",
+    "bullmq": "^5.1.0",
     "grammy": "^1.21.1",
     "@grammyjs/conversations": "^1.1.2",
     "@grammyjs/storage-redis": "^2.4.0"

@@ -62,7 +62,7 @@ describe('OTP Module', () => {
       expect(hash).toBeDefined();
       expect(typeof hash).toBe('string');
       expect(hash).not.toBe(otp);
-      expect(hash.startsWith('$2b$')).toBe(true);
+      expect(hash.startsWith('$2a$') || hash.startsWith('$2b$')).toBe(true);
     });
 
     it('should verify a correct OTP code', async () => {

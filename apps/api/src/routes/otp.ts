@@ -263,7 +263,7 @@ export async function registerOtpRoutes(fastify: FastifyInstance): Promise<void>
     }
     
     // Import bcrypt for verification
-    const bcrypt = await import('bcrypt');
+    const bcrypt = await import('bcryptjs');
     const isValid = await bcrypt.compare(body.code, otpRecord.otpHash);
     
     if (isValid) {
