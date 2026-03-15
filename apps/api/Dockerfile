@@ -21,6 +21,9 @@ COPY packages/core ./packages/core
 COPY packages/smtp ./packages/smtp
 COPY apps/api ./apps/api
 
+# Generate Prisma client before building
+RUN npx prisma generate --schema=packages/core/prisma/schema.prisma
+
 # Build packages in order
 RUN npm run build --workspace=packages/core
 RUN npm run build --workspace=packages/smtp
