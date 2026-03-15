@@ -3,11 +3,10 @@ import {
   getPrismaClient,
   checkDatabaseHealth,
   checkRedisHealth,
-  getRedisClient,
+  getBullMQRedis,
   getLogger,
   HTTP_STATUS,
 } from '@mailguard/core';
-import { getMailer } from '@mailguard/smtp';
 import { Queue } from 'bullmq';
 
 const logger = getLogger('api:routes:health');
@@ -17,7 +16,7 @@ const logger = getLogger('api:routes:health');
  * Health check endpoint
  */
 export async function registerHealthRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/health', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/health', async (_request: FastifyRequest, reply: FastifyReply) => {
     const startTime = Date.now();
     
     // Check database
@@ -29,7 +28,7 @@ export async function registerHealthRoutes(fastify: FastifyInstance): Promise<vo
     // Check queue
     let queueStatus = { waiting: 0, active: 0 };
     try {
-      const redis = await getRedisClient();
+      const redis = getBullMQRedis();
       const emailQueue = new Queue('mailguard:emails', { connection: redis });
       const [waiting, active] = await Promise.all([
         emailQueue.getWaitingCount(),
@@ -126,7 +125,7 @@ export async function registerHealthRoutes(fastify: FastifyInstance): Promise<vo
   });
   
   // Bot health check endpoint (called by API to verify bot is running)
-  fastify.get('/bot-health', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/bot-health', async (_request: FastifyRequest, _reply: FastifyReply) => {
     return { status: 'ok', service: 'bot' };
   });
 }

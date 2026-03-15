@@ -127,13 +127,14 @@ export interface ErrorResponse {
 // Queue job data types
 
 export interface EmailJobData {
-  otpRecordId: string;
+  otpRecordId?: string;
   senderEmailId: string;
   recipientEmail: string;
   subject: string;
   body: string;
   format: 'text' | 'html';
   projectId: string;
+  emailLogId?: string;
 }
 
 export interface OtpCleanupJobData {

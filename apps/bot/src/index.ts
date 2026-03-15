@@ -1,18 +1,19 @@
 import { Bot, session, type Context, type SessionFlavor } from 'grammy';
-import { Conversations, createConversation } from '@grammyjs/conversations';
+import { conversations, type ConversationFlavor } from '@grammyjs/conversations';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import {
   validateBotEnv,
   getPrismaClient,
   closePrismaClient,
-  getRedisClient,
-  closeRedisClient,
+  getBullMQRedis,
+  closeBullMQRedis,
   getLogger,
 } from '@mailguard/core';
 import { adminGateMiddleware } from './middleware/auth';
 import { handleStart } from './commands/start';
 import { createAddEmailConversation } from './wizards/addemail';
 import { createNewProjectConversation } from './wizards/newproject';
+import { createSetOtpConversation } from './commands/setotp';
 import { handleGenKey } from './commands/genkey';
 import { handleSenders, handleProjects, handleKeys } from './commands/list';
 import { handleLogs } from './commands/logs';
@@ -29,10 +30,12 @@ interface SessionData {
   currentSlug?: string;
 }
 
-type MyContext = Context & SessionFlavor<SessionData>;
+type MyContext = Context & SessionFlavor<SessionData> & ConversationFlavor;
 
 // Initial session value
-function initialSession(): SessionData {
+// Return type is intentionally unannotated so TypeScript infers `{}` which is
+// assignable to both SessionData (all optional) and ConversationSessionData (all optional).
+function initialSession() {
   return {};
 }
 
@@ -49,7 +52,7 @@ async function start(): Promise<void> {
     await prisma.$connect();
     
     logger.info('Initializing Redis connection...');
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     
     // Create bot
     const bot = new Bot<MyContext>(env.TELEGRAM_BOT_TOKEN);
@@ -66,13 +69,12 @@ async function start(): Promise<void> {
     );
     
     // Set up conversations
-    const conversations = new Conversations<MyContext>();
+    bot.use(conversations());
     
     // Register conversations
-    conversations.use(createAddEmailConversation());
-    conversations.use(createNewProjectConversation());
-    
-    bot.use(conversations);
+    bot.use(createAddEmailConversation());
+    bot.use(createNewProjectConversation());
+    bot.use(createSetOtpConversation());
     
     // Register command handlers
     
@@ -275,7 +277,7 @@ function setupGracefulShutdown(bot: Bot<MyContext>): void {
       await closePrismaClient();
       
       // Close Redis
-      await closeRedisClient();
+      await closeBullMQRedis();
       
       logger.info('Graceful shutdown completed');
       process.exit(0);

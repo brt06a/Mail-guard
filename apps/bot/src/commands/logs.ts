@@ -1,7 +1,5 @@
 import type { Context } from 'grammy';
-import { getPrismaClient, getLogger, maskEmail, formatDate } from '@mailguard/core';
-
-const logger = getLogger('bot:commands:logs');
+import { getPrismaClient, maskEmail, formatDate } from '@mailguard/core';
 
 const ITEMS_PER_PAGE = 10;
 

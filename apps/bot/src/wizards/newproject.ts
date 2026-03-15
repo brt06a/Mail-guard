@@ -1,18 +1,16 @@
 import { createConversation } from '@grammyjs/conversations';
-import type { Context, Conversation } from 'grammy';
+import type { Conversation } from '@grammyjs/conversations';
+import type { Context } from 'grammy';
 import { getPrismaClient, getLogger, generateSlug, isValidSlug, OTP_DEFAULTS } from '@mailguard/core';
 
 const logger = getLogger('bot:wizards:newproject');
 
-interface NewProjectContext extends Context {
-  conversation: Conversation<NewProjectContext>;
-}
-
+  // Remove unused interface now that we use Context directly
 /**
  * New Project wizard conversation
  * Multi-step: name → slug → OTP length → expiry → max attempts → sender
  */
-export async function newProjectConversation(conversation: Conversation<NewProjectContext>, ctx: NewProjectContext): Promise<void> {
+export async function newProjectConversation(conversation: Conversation<Context>, ctx: Context): Promise<void> {
   const prisma = getPrismaClient();
   
   // Check if there are any sender emails
@@ -91,7 +89,7 @@ export async function newProjectConversation(conversation: Conversation<NewProje
   const otpLengthCtx = await conversation.waitFor('callback_query');
   const otpLengthData = otpLengthCtx.callbackQuery?.data;
   
-  let otpLength = OTP_DEFAULTS.LENGTH;
+  let otpLength: number = OTP_DEFAULTS.LENGTH;
   if (otpLengthData === 'otp_length_4') otpLength = 4;
   else if (otpLengthData === 'otp_length_8') otpLength = 8;
   else if (otpLengthData === 'otp_length_6') otpLength = 6;
@@ -108,7 +106,7 @@ export async function newProjectConversation(conversation: Conversation<NewProje
   
   const expiryCtx = await conversation.waitFor(':text');
   const expiryText = expiryCtx.msg?.text?.trim();
-  let otpExpirySeconds = OTP_DEFAULTS.EXPIRY_SECONDS;
+  let otpExpirySeconds: number = OTP_DEFAULTS.EXPIRY_SECONDS;
   
   if (expiryText) {
     const parsed = parseInt(expiryText, 10);
@@ -126,7 +124,7 @@ export async function newProjectConversation(conversation: Conversation<NewProje
   
   const attemptsCtx = await conversation.waitFor(':text');
   const attemptsText = attemptsCtx.msg?.text?.trim();
-  let otpMaxAttempts = OTP_DEFAULTS.MAX_ATTEMPTS;
+  let otpMaxAttempts: number = OTP_DEFAULTS.MAX_ATTEMPTS;
   
   if (attemptsText) {
     const parsed = parseInt(attemptsText, 10);
@@ -166,6 +164,11 @@ export async function newProjectConversation(conversation: Conversation<NewProje
   
   const senderIndex = senderData ? parseInt(senderData.replace('sender_', ''), 10) : 0;
   const selectedSender = senders[senderIndex] ?? senders[0];
+  
+  if (!selectedSender) {
+    await ctx.reply('❌ No sender found. Please add a sender email first.');
+    return;
+  }
   
   await senderCtx.answerCallbackQuery();
   

@@ -14,11 +14,11 @@ import {
   QUEUE_JOBS,
   getLogger,
 } from '@mailguard/core';
-import type { SendOtpRequest, SendOtpResponse, VerifyOtpRequest, VerifyOtpResponse } from '@mailguard/core';
+import type { SendOtpRequest, SendOtpResponse, VerifyOtpRequest } from '@mailguard/core';
 import { checkOtpSendRateLimit, sendRateLimitResponse, checkProjectEmailRateLimit } from '../middleware/ratelimit';
 import { getRequestIp } from '../utils/request';
 import { Queue } from 'bullmq';
-import { getRedisClient } from '@mailguard/core';
+import { getBullMQRedis } from '@mailguard/core';
 
 const logger = getLogger('api:routes:otp');
 
@@ -37,7 +37,7 @@ let emailQueue: Queue | null = null;
 
 async function getEmailQueue(): Promise<Queue> {
   if (!emailQueue) {
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     emailQueue = new Queue(QUEUE_CONFIG.EMAIL_QUEUE, {
       connection: redis,
     });

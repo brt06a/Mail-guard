@@ -1,7 +1,9 @@
 import { createClient, RedisClientType } from 'redis';
+import { Redis as IORedis } from 'ioredis';
 import { getLogger } from './logger';
 
 let redisClient: RedisClientType | null = null;
+let bullMQRedisClient: IORedis | null = null;
 
 const logger = getLogger('core:redis');
 
@@ -57,6 +59,36 @@ export async function closeRedisClient(): Promise<void> {
   if (redisClient) {
     await redisClient.quit();
     redisClient = null;
+  }
+}
+
+/**
+ * Get or create an ioredis client for use with BullMQ and grammY session storage.
+ * ioredis connects lazily, so this is synchronous.
+ */
+export function getBullMQRedis(): IORedis {
+  if (!bullMQRedisClient) {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error('REDIS_URL environment variable is not set');
+    }
+    bullMQRedisClient = new IORedis(redisUrl, {
+      maxRetriesPerRequest: null,
+    });
+    bullMQRedisClient.on('error', (err) => {
+      logger.error({ err }, 'BullMQ Redis client error');
+    });
+  }
+  return bullMQRedisClient;
+}
+
+/**
+ * Close the BullMQ ioredis client connection
+ */
+export async function closeBullMQRedis(): Promise<void> {
+  if (bullMQRedisClient) {
+    await bullMQRedisClient.quit();
+    bullMQRedisClient = null;
   }
 }
 

@@ -131,7 +131,7 @@ async function setupGracefulShutdown(): Promise<void> {
   process.on('SIGINT', () => shutdown('SIGINT'));
   
   // Handle unhandled rejections
-  process.on('unhandledRejection', (reason, promise) => {
+  process.on('unhandledRejection', (reason) => {
     logger.error({ reason }, 'Unhandled rejection');
   });
   

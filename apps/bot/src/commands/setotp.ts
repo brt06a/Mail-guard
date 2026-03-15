@@ -1,13 +1,7 @@
 import type { Context } from 'grammy';
-import { Conversations, createConversation } from '@grammyjs/conversations';
-import type { Conversation } from 'grammy';
-import { getPrismaClient, getLogger, renderTemplate, TEMPLATE_PLACEHOLDERS, DEFAULT_OTP_TEMPLATE } from '@mailguard/core';
-
-const logger = getLogger('bot:commands:setotp');
-
-interface SetOtpContext extends Context {
-  conversation: Conversation<SetOtpContext>;
-}
+import { createConversation } from '@grammyjs/conversations';
+import type { Conversation } from '@grammyjs/conversations';
+import { getPrismaClient, renderTemplate, TEMPLATE_PLACEHOLDERS, DEFAULT_OTP_TEMPLATE } from '@mailguard/core';
 
 /**
  * Set OTP template command
@@ -40,7 +34,7 @@ export async function handleSetOtp(ctx: Context, slug: string): Promise<void> {
 /**
  * Set OTP template wizard
  */
-export async function setOtpConversation(conversation: Conversation<SetOtpContext>, ctx: SetOtpContext): Promise<void> {
+export async function setOtpConversation(conversation: Conversation<Context>, ctx: Context): Promise<void> {
   const prisma = getPrismaClient();
   
   // Get slug from context

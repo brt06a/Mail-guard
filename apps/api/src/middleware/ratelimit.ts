@@ -33,7 +33,7 @@ async function getRateLimiter(): Promise<RateLimiter> {
  * - OTP sends per IP per minute
  */
 export async function checkOtpSendRateLimit(
-  request: FastifyRequest,
+  _request: FastifyRequest,
   projectId: string,
   email: string,
   ip: string

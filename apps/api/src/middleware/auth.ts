@@ -1,4 +1,4 @@
-import type { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { validateApiKey, ERROR_CODES, HTTP_STATUS, getLogger, type ApiKeyWithProject } from '@mailguard/core';
 import { getAuthToken } from '../utils/request';
 

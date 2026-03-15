@@ -33,7 +33,7 @@ export async function enforceHttps(
  * Add security headers to all responses
  */
 export function addSecurityHeaders(
-  request: FastifyRequest,
+  _request: FastifyRequest,
   reply: FastifyReply
 ): void {
   reply.header('X-Content-Type-Options', 'nosniff');
@@ -64,7 +64,7 @@ export function logRequest(
       duration,
       ip: request.ip,
     }, 'Request completed');
-  }).catch((err) => {
+  }, (err: Error) => {
     const duration = Date.now() - startTime;
     logger.error({
       method: request.method,

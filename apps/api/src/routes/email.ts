@@ -3,10 +3,10 @@ import { z } from 'zod';
 import {
   getPrismaClient,
   HTTP_STATUS,
-  ERROR_CODES,
   QUEUE_CONFIG,
   QUEUE_JOBS,
   getLogger,
+  getBullMQRedis,
 } from '@mailguard/core';
 import { checkProjectEmailRateLimit, sendRateLimitResponse } from '../middleware/ratelimit';
 
@@ -65,8 +65,7 @@ export async function registerEmailRoutes(fastify: FastifyInstance): Promise<voi
     
     // Enqueue email job
     const { Queue } = await import('bullmq');
-    const { getRedisClient } = await import('@mailguard/core');
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     const queue = new Queue(QUEUE_CONFIG.EMAIL_QUEUE, { connection: redis });
     
     await queue.add(QUEUE_JOBS.SEND_EMAIL, {

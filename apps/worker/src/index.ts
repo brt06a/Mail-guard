@@ -3,8 +3,8 @@ import {
   validateWorkerEnv,
   getPrismaClient,
   closePrismaClient,
-  getRedisClient,
-  closeRedisClient,
+  getBullMQRedis,
+  closeBullMQRedis,
   getLogger,
   QUEUE_CONFIG,
   QUEUE_JOBS,
@@ -18,7 +18,7 @@ import { processNotificationJob } from './processors/notification';
 const logger = getLogger('worker:server');
 
 // Validate environment on startup
-const env = validateWorkerEnv();
+validateWorkerEnv();
 
 // Workers
 let emailWorker: Worker | null = null;
@@ -41,7 +41,7 @@ async function start(): Promise<void> {
     await prisma.$connect();
     
     logger.info('Initializing Redis connection...');
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     
     // Create workers
     logger.info('Creating email worker...');
@@ -59,10 +59,8 @@ async function start(): Promise<void> {
           max: 10,
           duration: 1000, // 10 jobs per second
         },
-        settings: {
-          maxStalledCount: 3,
-          stalledInterval: 30000,
-        },
+        maxStalledCount: 3,
+        stalledInterval: 30000,
       }
     );
     
@@ -141,6 +139,7 @@ async function start(): Promise<void> {
         if (job.name === QUEUE_JOBS.CLEANUP_OTP) {
           return processCleanupJob(job);
         }
+        return undefined;
       },
       {
         connection: redis,
@@ -196,7 +195,7 @@ function setupGracefulShutdown(): void {
       await closePrismaClient();
       
       // Close Redis
-      await closeRedisClient();
+      await closeBullMQRedis();
       
       logger.info('Graceful shutdown completed');
       process.exit(0);

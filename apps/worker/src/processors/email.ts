@@ -1,15 +1,9 @@
 import type { Job } from 'bullmq';
 import {
   getPrismaClient,
-  getRedisClient,
-  decrypt,
-  QUEUE_CONFIG,
-  QUEUE_JOBS,
   getLogger,
-  closePrismaClient,
-  closeRedisClient,
 } from '@mailguard/core';
-import { getMailer, closeMailer } from '@mailguard/smtp';
+import { getMailer } from '@mailguard/smtp';
 import type { EmailJobData } from '@mailguard/core';
 
 const logger = getLogger('worker:email');
@@ -20,7 +14,7 @@ const logger = getLogger('worker:email');
  */
 export async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
   const data = job.data;
-  const { otpRecordId, senderEmailId, recipientEmail, subject, body, format, emailLogId } = data;
+  const { senderEmailId, recipientEmail, subject, body, format, emailLogId } = data;
   
   logger.info({ jobId: job.id, recipientEmail: recipientEmail.substring(0, 3) + '***' }, 'Processing email job');
   

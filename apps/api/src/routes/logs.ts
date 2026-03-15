@@ -2,11 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import {
   getPrismaClient,
-  HTTP_STATUS,
-  getLogger,
 } from '@mailguard/core';
-
-const logger = getLogger('api:routes:logs');
 
 // Validation schema
 const getLogsSchema = z.object({
@@ -24,7 +20,7 @@ const getLogsSchema = z.object({
  * Query email logs with filters
  */
 export async function registerLogsRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/api/v1/logs', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get('/api/v1/logs', async (request: FastifyRequest, _reply: FastifyReply) => {
     const query = getLogsSchema.parse(request.query);
     const { apiKey } = request as FastifyRequest & { apiKey: any };
     

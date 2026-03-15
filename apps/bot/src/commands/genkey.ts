@@ -1,7 +1,6 @@
 import type { Context } from 'grammy';
-import { getPrismaClient, getLogger, generateApiKey, maskEmail, QUEUE_CONFIG, QUEUE_JOBS, NOTIFICATION_TYPES } from '@mailguard/core';
+import { getPrismaClient, getLogger, generateApiKey, QUEUE_CONFIG, QUEUE_JOBS, NOTIFICATION_TYPES, getBullMQRedis } from '@mailguard/core';
 import { Queue } from 'bullmq';
-import { getRedisClient } from '@mailguard/core';
 
 const logger = getLogger('bot:commands:genkey');
 
@@ -73,7 +72,7 @@ export async function handleGenKey(ctx: Context): Promise<void> {
   
   // Send notification
   try {
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     const notificationQueue = new Queue(QUEUE_CONFIG.NOTIFICATION_QUEUE, { connection: redis });
     await notificationQueue.add(QUEUE_JOBS.SEND_TELEGRAM_NOTIFICATION, {
       type: NOTIFICATION_TYPES.API_KEY_CREATED,

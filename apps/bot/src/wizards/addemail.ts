@@ -1,24 +1,20 @@
-import { Conversations, createConversation } from '@grammyjs/conversations';
-import type { Context, Conversation } from 'grammy';
+import { createConversation } from '@grammyjs/conversations';
+import type { Conversation } from '@grammyjs/conversations';
+import type { Context } from 'grammy';
 import { getPrismaClient, getLogger, isValidEmail, maskEmail } from '@mailguard/core';
 import { ProviderDetector } from '@mailguard/smtp';
 import { getMailer } from '@mailguard/smtp';
 import { Queue } from 'bullmq';
-import { getRedisClient, QUEUE_CONFIG, QUEUE_JOBS, encrypt, NOTIFICATION_TYPES } from '@mailguard/core';
+import { getBullMQRedis, QUEUE_CONFIG, QUEUE_JOBS, encrypt, NOTIFICATION_TYPES } from '@mailguard/core';
 
 const logger = getLogger('bot:wizards:addemail');
-
-interface AddEmailContext extends Context {
-  conversation: Conversation<AddEmailContext>;
-}
 
 /**
  * Add Email wizard conversation
  * Two-step wizard: email address + app password
  */
-export async function addEmailConversation(conversation: Conversation<AddEmailContext>, ctx: AddEmailContext): Promise<void> {
+export async function addEmailConversation(conversation: Conversation<Context>, ctx: Context): Promise<void> {
   const encryptionKey = process.env.ENCRYPTION_KEY!;
-  const internalApiUrl = process.env.INTERNAL_API_URL;
   
   // Step 1: Ask for email address
   await ctx.reply(
@@ -116,7 +112,7 @@ export async function addEmailConversation(conversation: Conversation<AddEmailCo
     logger.info({ senderId: sender.id, email: maskEmail(email) }, 'Sender email saved');
     
     // Send notification
-    const redis = await getRedisClient();
+    const redis = getBullMQRedis();
     const notificationQueue = new Queue(QUEUE_CONFIG.NOTIFICATION_QUEUE, { connection: redis });
     await notificationQueue.add(QUEUE_JOBS.SEND_TELEGRAM_NOTIFICATION, {
       type: NOTIFICATION_TYPES.API_KEY_CREATED,
